@@ -15,6 +15,7 @@ AB_OTA_UPDATER := true
 ENABLE_VIRTUAL_AB := true
 AB_OTA_PARTITIONS += \
     boot \
+    recovery \
     system_ext \
     vendor \
     product \
@@ -22,8 +23,8 @@ AB_OTA_PARTITIONS += \
     system \
     vendor_boot \
     vbmeta_system
-BOARD_USES_RECOVERY_AS_BOOT := true
-TARGET_NO_RECOVERY := true
+BOARD_USES_RECOVERY_AS_BOOT := false
+TARGET_NO_RECOVERY := false
 
 # Architecture
 TARGET_ARCH := arm64
@@ -71,6 +72,7 @@ endif
 
 # Partitions
 BOARD_BOOTIMAGE_PARTITION_SIZE := 201326592
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 201326592
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_HAS_LARGE_FILESYSTEM := true
