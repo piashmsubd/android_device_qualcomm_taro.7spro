@@ -1,10 +1,18 @@
-/system         ext4     system                                     flags=display=system;logical;slotselect
-/system_ext     ext4     system_ext                                 flags=display=system_ext;logical;slotselect
-/product        ext4     product                                    flags=display=product;logical;slotselect
-/vendor         ext4     vendor                                     flags=display=vendor;logical;slotselect
-/odm            ext4     odm                                        flags=display=odm;logical;slotselect
-/metadata       ext4     /dev/block/bootdevice/by-name/metadata     flags=display=metadata
-/data           f2fs     /dev/block/bootdevice/by-name/userdata     flags=display=data
-/sdcard         vfat     /dev/block/mmcblk0p1                       flags=display=sdcard
-/boot           emmc     /dev/block/bootdevice/by-name/boot         flags=display=boot
-/misc           emmc     /dev/block/bootdevice/by-name/misc         flags=display=misc
+# mount point       fstype    device                                                                flags
+/system             ext4      system                                                                flags=display=System;logical;slotselect
+/system_ext         ext4      system_ext                                                            flags=display=System_Ext;logical;slotselect
+/product            ext4      product                                                               flags=display=Product;logical;slotselect
+/vendor             ext4      vendor                                                                flags=display=Vendor;logical;slotselect
+/odm                ext4      odm                                                                   flags=display=ODM;logical;slotselect
+/metadata           ext4      /dev/block/bootdevice/by-name/metadata                                flags=display=Metadata;wrappedkey
+/data               f2fs      /dev/block/bootdevice/by-name/userdata                                flags=fileencryption=ice:aes-256-cts:wrappedkey_v0;keydirectory=/metadata/vold/metadata_encryption;metadata_encryption=aes-256-xts:wrappedkey_v0
+/boot               emmc      /dev/block/bootdevice/by-name/boot                                    flags=display=Boot;slotselect;flashimg=1;backup=1
+/vendor_boot        emmc      /dev/block/bootdevice/by-name/vendor_boot                             flags=display=Vendor_Boot;slotselect;flashimg=1;backup=1
+/dtbo               emmc      /dev/block/bootdevice/by-name/dtbo                                    flags=display=DTBO;slotselect;flashimg=1;backup=1
+/vbmeta             emmc      /dev/block/bootdevice/by-name/vbmeta                                  flags=display=VBMeta;slotselect;flashimg=1
+/vbmeta_system      emmc      /dev/block/bootdevice/by-name/vbmeta_system                           flags=display=VBMeta_System;slotselect;flashimg=1
+/misc               emmc      /dev/block/bootdevice/by-name/misc                                    flags=display=Misc
+
+# Removable storage
+/sdcard1            vfat      /dev/block/mmcblk0p1                    /dev/block/mmcblk0            flags=display=MicroSD;storage;wipeingui;removable
+/usb-otg            auto      /dev/block/sda1                         /dev/block/sda                flags=display=USB-OTG;storage;wipeingui;removable
