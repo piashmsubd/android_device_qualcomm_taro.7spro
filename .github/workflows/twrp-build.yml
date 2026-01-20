@@ -1,0 +1,181 @@
+name: Build TWRP for RedMagic 7S Pro
+
+on:
+  workflow_dispatch:
+    inputs:
+      MANIFEST_BRANCH:
+        description: 'TWRP Manifest Branch'
+        required: true
+        default: 'twrp-12.1'
+        type: choice
+        options:
+          - twrp-12.1
+          - twrp-11
+      DEVICE_TREE_BRANCH:
+        description: 'Device Tree Branch'
+        required: true
+        default: 'NX709S-user-12-SKQ1.220502.001-eng.nubia.20241204.170923-release-keys'
+      BUILD_TARGET:
+        description: 'Build Target'
+        required: true
+        default: 'recoveryimage'
+        type: choice
+        options:
+          - recoveryimage
+          - bootimage
+
+jobs:
+  build:
+    name: Build TWRP by ${{ github.actor }}
+    runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Clean Up
+      uses: rokibhasansagar/slimhub_actions@main
+
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 12
+
+    - name: Prepare the Build Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          git aria2 curl wget rsync zip unzip \
+          build-essential gcc g++ clang cmake ninja-build \
+          python3 python-is-python3 bc bison flex \
+          libssl-dev libncurses5 libxml2-utils \
+          schedtool libtinfo5 repo ccache \
+          openjdk-11-jdk android-sdk-platform-tools
+        
+        sudo mkdir -p /workdir
+        sudo chown $USER:$USER /workdir
+
+    - name: Initialize TWRP Repo
+      working-directory: /workdir
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git config --global color.ui false
+        
+        mkdir -p twrp
+        cd twrp
+        
+        repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+        
+        repo sync -c --no-clone-bundle --optimized-fetch --prune --force-sync -j$(nproc --all)
+
+    - name: Clone Device Tree
+      working-directory: /workdir/twrp
+      run: |
+        git clone https://github.com/${{ github.repository }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} device/qualcomm/taro
+
+    - name: Check Device Tree
+      working-directory: /workdir/twrp
+      run: |
+        echo "Device tree contents:"
+        ls -la device/qualcomm/taro/
+        
+        echo -e "\nPrebuilt files:"
+        ls -lh device/qualcomm/taro/prebuilt/
+        
+        echo -e "\nBoardConfig.mk:"
+        cat device/qualcomm/taro/BoardConfig.mk | grep -E "PLATFORM|BOOTIMG|PREBUILT"
+
+    - name: Set up ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        max-size: 8G
+        key: twrp-taro-${{ github.event.inputs.MANIFEST_BRANCH }}
+
+    - name: Build TWRP
+      working-directory: /workdir/twrp
+      run: |
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export LC_ALL=C
+        export USE_CCACHE=1
+        export CCACHE_EXEC=/usr/bin/ccache
+        ccache -M 8G
+        ccache -z
+        
+        source build/envsetup.sh
+        lunch omni_taro-eng
+        
+        echo "Starting build..."
+        mka ${{ github.event.inputs.BUILD_TARGET }} -j$(nproc --all)
+        
+        echo "Build completed!"
+        ccache -s
+
+    - name: Check Build Output
+      working-directory: /workdir/twrp
+      run: |
+        echo "Build artifacts:"
+        ls -lh out/target/product/taro/
+        
+        if [ -f out/target/product/taro/recovery.img ]; then
+          echo "recovery.img found!"
+          cp out/target/product/taro/recovery.img /tmp/TWRP-NX709S-$(date +%Y%m%d).img
+        fi
+        
+        if [ -f out/target/product/taro/boot.img ]; then
+          echo "boot.img found!"
+          cp out/target/product/taro/boot.img /tmp/TWRP-NX709S-boot-$(date +%Y%m%d).img
+        fi
+
+    - name: Upload TWRP Recovery
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: TWRP-NX709S-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.run_number }}
+        path: |
+          /tmp/TWRP-*.img
+          /workdir/twrp/out/target/product/taro/*.img
+          /workdir/twrp/out/target/product/taro/*.zip
+        if-no-files-found: warn
+
+    - name: Create Release
+      if: success()
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: TWRP-NX709S-${{ github.run_number }}
+        name: TWRP for RedMagic 7S Pro (Build ${{ github.run_number }})
+        body: |
+          ## TWRP Recovery for RedMagic 7S Pro (NX709S)
+          
+          **Build Information:**
+          - Device: RedMagic 7S Pro (NX709S)
+          - Platform: Snapdragon 8+ Gen 1 (taro)
+          - TWRP Version: ${{ github.event.inputs.MANIFEST_BRANCH }}
+          - Build Date: ${{ github.event.repository.updated_at }}
+          - Build Number: ${{ github.run_number }}
+          
+          **Features:**
+          - Virtual A/B support
+          - FBE/Metadata decryption support
+          - MTP support
+          - USB-OTG support
+          - F2FS file system support
+          
+          **Installation:**
+          1. Download the recovery.img file
+          2. Boot to fastboot mode: `adb reboot bootloader`
+          3. Flash TWRP: `fastboot flash recovery TWRP-NX709S-*.img`
+          4. Boot to recovery: `fastboot reboot recovery`
+          
+          **Note:** This is an unofficial build. Use at your own risk!
+        files: |
+          /tmp/TWRP-*.img
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
