@@ -1,87 +1,68 @@
 # Prebuilt Files for RedMagic 7S Pro (NX709S)
 
-## Required Files
+## Status: ✅ All Required Files Present
 
-You need to extract the following files from your device's stock boot/recovery images and place them in this directory:
+All prebuilt files have been extracted from the stock firmware and are ready for building TWRP.
 
-### 1. Kernel Binary
-- **File**: `kernel`
-- **Location**: Place in `prebuilt/kernel`
-- **How to extract**:
-  ```bash
-  # Extract from boot.img using Android Image Kitchen or similar tool
-  # The kernel is usually named "Image" or "Image.gz"
-  ```
+## Files Included
 
-### 2. Device Tree Blob (DTB)
-- **File**: `dtb` or multiple `.dtb` files
-- **Location**: Place in `prebuilt/dtb/`
-- **How to extract**:
-  ```bash
-  # Extract from boot.img - DTB is usually appended to kernel or separate
-  # If multiple DTBs exist, place all in the dtb/ folder
-  ```
+### 1. Kernel Binary ✅
+- **File**: `kernel` (45MB)
+- **Type**: Linux kernel ARM64 boot executable Image
+- **Source**: Extracted from stock boot.img
+- **Description**: Android 12 kernel for Snapdragon 8+ Gen 1 (taro)
 
-### 3. Device Tree Blob Overlay (DTBO)
-- **File**: `dtbo.img`
-- **Location**: Place in `prebuilt/dtbo.img`
-- **How to extract**:
-  ```bash
-  # Extract from the dtbo partition
-  adb pull /dev/block/bootdevice/by-name/dtbo dtbo.img
-  # OR from your stock ROM's dtbo partition
-  ```
+### 2. Device Tree Blob (DTB) ✅
+- **File**: `dtb.dtb` (470KB)
+- **Directory**: `dtb/taro.dtb` (backup)
+- **Type**: Device Tree Blob version 17
+- **Source**: Extracted from vendor_boot.img
+- **Description**: Hardware device tree for NX709S
 
-### 4. Vendor Boot Image (Optional but Recommended)
-- **File**: `vendor_boot.img`
-- **Location**: Place in `prebuilt/vendor_boot.img`
-- **How to extract**:
-  ```bash
-  # Extract from the vendor_boot partition
-  adb pull /dev/block/bootdevice/by-name/vendor_boot vendor_boot.img
-  ```
+### 3. Device Tree Blob Overlay (DTBO) ✅
+- **File**: `dtbo.img` (24MB)
+- **Source**: Stock firmware dtbo partition
+- **Description**: Device tree overlay for runtime hardware configuration
 
-## Extraction Instructions
+### 4. Vendor Boot Image ✅
+- **File**: `vendor_boot.img` (96MB)
+- **Source**: Stock firmware vendor_boot partition
+- **Description**: Vendor ramdisk and DTB for Virtual A/B
 
-### Method 1: From Device (Requires Root)
-```bash
-adb shell su -c "dd if=/dev/block/bootdevice/by-name/boot of=/sdcard/boot.img"
-adb shell su -c "dd if=/dev/block/bootdevice/by-name/dtbo of=/sdcard/dtbo.img"
-adb shell su -c "dd if=/dev/block/bootdevice/by-name/vendor_boot of=/sdcard/vendor_boot.img"
-adb pull /sdcard/boot.img
-adb pull /sdcard/dtbo.img
-adb pull /sdcard/vendor_boot.img
-```
+### 5. Vendor DLKM Image ✅
+- **File**: `vendor_dlkm.img` (84MB)
+- **Source**: Stock firmware vendor_dlkm partition
+- **Description**: Vendor kernel modules (Dynamic Loadable Kernel Modules)
 
-Then use [Android Image Kitchen](https://github.com/osm0sis/Android-Image-Kitchen) to unpack boot.img:
-```bash
-./unpackimg.sh boot.img
-# Kernel will be in split_img/ folder
-# DTB may be in split_img/ or ramdisk/
-```
+## Build Information
 
-### Method 2: From Stock ROM
-1. Download the official stock ROM for NX709S
-2. Extract the ROM package
-3. Locate `boot.img`, `dtbo.img`, and `vendor_boot.img`
-4. Use Android Image Kitchen to extract kernel and DTB from boot.img
+- **Device**: RedMagic 7S Pro (NX709S)
+- **Platform**: Snapdragon 8+ Gen 1 (taro)
+- **Android Version**: 12
+- **Boot Header Version**: 4
+- **Kernel Size**: 46,705,764 bytes
+- **DTB Size**: 481,081 bytes
+- **Build Fingerprint**: nubia/NX709S/NX709S:12/SKQ1.220502.001/eng.nubia.20241204.170923:user/release-keys
 
-## File Structure After Extraction
+## Current File Structure
 
 ```
 prebuilt/
 ├── README.md (this file)
-├── kernel (extracted from boot.img)
-├── dtb (extracted DTB file or symlink to dtb/xxxx.dtb)
+├── kernel (45MB - ARM64 kernel Image)
+├── dtb.dtb (470KB - Device Tree Blob)
 ├── dtb/
-│   └── (optional: individual .dtb files if multiple exist)
-├── dtbo.img (extracted from dtbo partition)
-└── vendor_boot.img (optional: extracted from vendor_boot partition)
+│   └── taro.dtb (470KB - backup copy)
+├── dtbo.img (24MB - Device Tree Blob Overlay)
+├── vendor_boot.img (96MB - Vendor boot ramdisk)
+└── vendor_dlkm.img (84MB - Vendor kernel modules)
 ```
 
-## Notes
+## Usage in Build System
 
-- The `kernel` file should be the raw Image binary (uncompressed)
-- If your boot.img contains a compressed kernel (Image.gz), decompress it first
-- For Snapdragon 8+ Gen 1 (taro), boot header version 4 is used
-- Virtual A/B devices (like this one) require vendor_boot.img for proper TWRP functionality
+The device tree is configured to use these prebuilt files:
+- `TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel`
+- `TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.dtb`
+- `BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img`
+
+These are automatically included during TWRP compilation.
