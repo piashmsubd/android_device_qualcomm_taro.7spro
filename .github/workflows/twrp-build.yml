@@ -95,25 +95,12 @@ jobs:
         echo -e "\nBoardConfig.mk:"
         cat device/qualcomm/taro/BoardConfig.mk | grep -E "PLATFORM|BOOTIMG|PREBUILT"
 
-    - name: Set up ccache
-      run: |
-        sudo mkdir -p /workdir/.ccache
-        sudo chown -R $USER:$USER /workdir/.ccache
-        sudo chmod -R 777 /workdir/.ccache
-        export CCACHE_DIR=/workdir/.ccache
-        ccache -M 8G
-        ccache -z
-
     - name: Build TWRP
       working-directory: /workdir/twrp
       run: |
         export ALLOW_MISSING_DEPENDENCIES=true
         export LC_ALL=C
-        export USE_CCACHE=1
-        export CCACHE_EXEC=/usr/bin/ccache
-        export CCACHE_DIR=/workdir/.ccache
-        ccache -M 8G
-        ccache -z
+        export USE_CCACHE=0
         
         source build/envsetup.sh
         lunch twrp_taro-eng
@@ -122,7 +109,6 @@ jobs:
         mka ${{ github.event.inputs.BUILD_TARGET }} -j$(nproc --all)
         
         echo "Build completed!"
-        ccache -s
 
     - name: Check Build Output
       working-directory: /workdir/twrp
