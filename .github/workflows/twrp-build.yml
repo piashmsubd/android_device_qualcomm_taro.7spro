@@ -96,10 +96,13 @@ jobs:
         cat device/qualcomm/taro/BoardConfig.mk | grep -E "PLATFORM|BOOTIMG|PREBUILT"
 
     - name: Set up ccache
-      uses: hendrikmuhs/ccache-action@v1.2
-      with:
-        max-size: 8G
-        key: twrp-taro-${{ github.event.inputs.MANIFEST_BRANCH }}
+      run: |
+        sudo mkdir -p /workdir/.ccache
+        sudo chown -R $USER:$USER /workdir/.ccache
+        sudo chmod -R 777 /workdir/.ccache
+        export CCACHE_DIR=/workdir/.ccache
+        ccache -M 8G
+        ccache -z
 
     - name: Build TWRP
       working-directory: /workdir/twrp
@@ -109,7 +112,6 @@ jobs:
         export USE_CCACHE=1
         export CCACHE_EXEC=/usr/bin/ccache
         export CCACHE_DIR=/workdir/.ccache
-        mkdir -p $CCACHE_DIR
         ccache -M 8G
         ccache -z
         
