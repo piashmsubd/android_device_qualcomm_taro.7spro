@@ -66,7 +66,8 @@ BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
 TARGET_FORCE_PREBUILT_KERNEL := true
 ifeq ($(TARGET_FORCE_PREBUILT_KERNEL),true)
 TARGET_PREBUILT_KERNEL := $(DEVICE_PATH)/prebuilt/kernel
-TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.dtb
+TARGET_PREBUILT_DTB := $(DEVICE_PATH)/prebuilt/dtb.img
+BOARD_PREBUILT_DTBIMAGE_DIR := $(DEVICE_PATH)/prebuilt
 BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
 endif
 
@@ -136,6 +137,14 @@ TW_DEFAULT_BRIGHTNESS := 1200
 TW_NO_SCREEN_BLANK := true
 TW_EXCLUDE_APEX := true
 TW_SUPPORT_INPUT_AIDL_HAPTICS := true
+
+# System Mount & Permissions
+BOARD_ROOT_EXTRA_FOLDERS := metadata
+TW_OVERRIDE_SYSTEM_PROPS := \
+    "ro.build.product;ro.build.fingerprint;ro.build.version.incremental;ro.product.device=ro.product.system.device;ro.product.model=ro.product.system.model;ro.product.name=ro.product.system.name"
+BOARD_SUPPRESS_SECURE_ERASE := true
+TW_NO_LEGACY_PROPS := true
+AB_OTA_UPDATER := true
 
 # Crypto
 TW_INCLUDE_CRYPTO := true
