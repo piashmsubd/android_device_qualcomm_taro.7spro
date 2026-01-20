@@ -6,9 +6,9 @@
 #
 
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/omni_taro.mk
+    $(LOCAL_DIR)/twrp_taro.mk
 
 COMMON_LUNCH_CHOICES := \
-    omni_taro-user \
-    omni_taro-userdebug \
-    omni_taro-eng
+    twrp_taro-user \
+    twrp_taro-userdebug \
+    twrp_taro-eng

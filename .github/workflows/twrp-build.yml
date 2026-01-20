@@ -112,7 +112,7 @@ jobs:
         ccache -z
         
         source build/envsetup.sh
-        lunch omni_taro-eng
+        lunch twrp_taro-eng
         
         echo "Starting build..."
         mka ${{ github.event.inputs.BUILD_TARGET }} -j$(nproc --all)
