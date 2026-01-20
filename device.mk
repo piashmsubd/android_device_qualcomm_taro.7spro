@@ -25,10 +25,7 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     bootctrl.taro \
-    bootctrl.taro.recovery
-
-PRODUCT_STATIC_BOOT_CONTROL_HAL := \
-    bootctrl.taro \
+    bootctrl.taro.recovery \
     libgptutils \
     libz \
     libcutils
