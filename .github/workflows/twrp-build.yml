@@ -18,11 +18,11 @@ on:
       BUILD_TARGET:
         description: 'Build Target'
         required: true
-        default: 'recoveryimage'
+        default: 'bootimage'
         type: choice
         options:
-          - recoveryimage
           - bootimage
+          - recoveryimage
 
 jobs:
   build:
